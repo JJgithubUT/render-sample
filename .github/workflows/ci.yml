@@ -5,6 +5,12 @@ on:
     branches: [main, "feature/**"]
   pull_request:
     branches: [main]
+  # Pruebas programadas. GitHub Actions no permite menos de 5 minutos:
+  # "* * * * *" (cada minuto) se ejecutaría igual cada 5 min o más.
+  schedule:
+    - cron: "*/5 * * * *"
+  # Botón "Run workflow" para lanzarlo a mano desde la pestaña Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,6 +31,7 @@ jobs:
         run: npm run build
 
       - name: Guardar artefacto del build
+        if: github.event_name != 'schedule'
         uses: actions/upload-artifact@v4
         with:
           name: dist

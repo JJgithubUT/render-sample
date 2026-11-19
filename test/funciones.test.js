@@ -13,7 +13,9 @@ test('saludar sin nombre', () => {
 });
 
 test('sumar dos números', () => {
-  assert.strictEqual(sumar(2, 3), 5);
+  // FALLA A PROPÓSITO para la demo: 2 + 3 es 5, no 6.
+  // Para arreglarlo, cambia el 6 por 5 y haz push.
+  assert.strictEqual(sumar(2, 3), 6);
 });
 
 test('sumar acepta texto numérico (query string)', () => {
