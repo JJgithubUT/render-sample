@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Deploy en Render</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="etiqueta">DevOps · Fase Deploy</p>
+      <h1>Demo de despliegue en Render</h1>
+      <p class="sub">GitHub → GitHub Actions (CI) → Render (build + deploy)</p>
+    </header>
+
+    <section class="tarjeta">
+      <h2>Información del build</h2>
+      <p class="nota">Generada por <code>npm run build</code> durante el deploy.</p>
+      <dl id="build"><dt>Cargando…</dt></dl>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Servidor en vivo</h2>
+      <p class="nota">Respuesta de <code>/api/info</code> y variables de entorno de Render.</p>
+      <dl id="servidor"><dt>Cargando…</dt></dl>
+      <p class="estado">Health check: <span id="health">…</span></p>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Probar funciones</h2>
+      <div class="fila">
+        <input id="nombre" placeholder="Tu nombre">
+        <button onclick="saludo()">Saludar</button>
+      </div>
+      <div class="fila">
+        <input id="a" type="number" value="2"> +
+        <input id="b" type="number" value="3">
+        <button onclick="suma()">Sumar</button>
+      </div>
+      <pre id="salida">Aquí aparece la respuesta de la API</pre>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Flujo de despliegue</h2>
+      <ol class="flujo">
+        <li><b>git push</b> a <code>main</code></li>
+        <li><b>GitHub Actions</b> ejecuta pruebas y build</li>
+        <li><b>Render</b> detecta el commit y corre <code>npm test && npm run build</code></li>
+        <li>Si pasa, arranca <code>npm start</code> y verifica <code>/health</code></li>
+        <li>Si algo falla, la versión anterior sigue en línea</li>
+      </ol>
+    </section>
+  </main>
+
+  <script>
+    const etiquetas = {
+      version: 'Versión', commit: 'Commit', rama: 'Rama', fechaBuild: 'Fecha del build',
+      entorno: 'Entorno', node: 'Node.js', servicio: 'Servicio', url: 'URL',
+      mensaje: 'APP_MENSAJE', uptime: 'Tiempo encendido', visitas: 'Visitas a la API'
+    };
+    function pintar(id, obj) {
+      document.getElementById(id).innerHTML = Object.entries(obj)
+        .map(([k, v]) => `<dt>${etiquetas[k] || k}</dt><dd>${v}</dd>`).join('');
+    }
+    async function cargar() {
+      const info = await (await fetch('/api/info')).json();
+      if (info.build.fechaBuild) info.build.fechaBuild = new Date(info.build.fechaBuild).toLocaleString('es-MX');
+      pintar('build', info.build);
+      pintar('servidor', info.servidor);
+      const h = await (await fetch('/health')).json();
+      document.getElementById('health').textContent = h.status === 'ok' ? '✔ OK' : '✖ Falla';
+    }
+    async function mostrar(url) {
+      const r = await fetch(url);
+      document.getElementById('salida').textContent = `GET ${url}\n` + JSON.stringify(await r.json(), null, 2);
+    }
+    const saludo = () => mostrar('/api/saludo?nombre=' + encodeURIComponent(document.getElementById('nombre').value));
+    const suma = () => mostrar(`/api/sumar?a=${document.getElementById('a').value}&b=${document.getElementById('b').value}`);
+    cargar();
+  </script>
+</body>
+</html>

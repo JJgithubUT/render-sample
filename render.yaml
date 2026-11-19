@@ -1,0 +1,23 @@
+# Blueprint de Render: describe el servicio como código (Infrastructure as Code).
+# En Render: New + → Blueprint → seleccionar este repositorio.
+services:
+  - type: web
+    name: devops-render-demo
+    runtime: node
+    plan: free
+    branch: main
+    # BUILD: primero pruebas, luego build. Si las pruebas fallan, no hay deploy.
+    buildCommand: npm test && npm run build
+    startCommand: npm start
+    # Render verifica esta ruta antes de enviar tráfico a la nueva versión
+    healthCheckPath: /health
+    # commit = despliega en cada push a main
+    # checksPass = despliega solo si GitHub Actions pasó (CI → CD)
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: APP_MENSAJE
+        value: "Desplegado automáticamente desde GitHub"
